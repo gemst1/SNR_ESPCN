@@ -64,7 +64,7 @@ def conv(filter_size, input, outputdim, strides=None, scope = None, stddev=None)
          conv = tf.reshape(tf.nn.bias_add(conv, b), conv.get_shape())
          return conv
 
-def SNR_ESPCN(i_sn, batch = True):
+def SNR_ESPCN(i_sn, batch = True, train = True):
     filter_size1 = [5, 5]
     filter_size2 = [3, 3]
     filter_size3 = [3, 3]
@@ -74,7 +74,7 @@ def SNR_ESPCN(i_sn, batch = True):
     h1 = tf.tanh(conv(filter_size1, i_sn, 64, strides=[1, 1, 1, 1], scope='g_h1', stddev=stddev))
 
     gbn_2 = batch_norm(name='gbn_2')
-    h2 = tf.tanh(gbn_2(conv(filter_size2, h1, 32, strides=[1, 1, 1, 1], scope='g_h2', stddev=stddev), batch=batch))
+    h2 = tf.tanh(gbn_2(conv(filter_size2, h1, 32, strides=[1, 1, 1, 1], scope='g_h2', stddev=stddev), batch=batch, train=train))
 
     h3 = tf.tanh(conv(filter_size3, h2, 4, strides=[1, 1, 1, 1], scope='g_h3', stddev=stddev))
     h3 = tf.depth_to_space(h3, 2)
@@ -162,7 +162,7 @@ class SNR(object):
         with tf.variable_scope('SNR') as scope:
             self.G = SNR_ESPCN(self.i_sn, batch=True)
             scope.reuse_variables()
-            self.G_ = SNR_ESPCN(self.i_sn_, batch=True)
+            self.G_ = SNR_ESPCN(self.i_sn_, batch=True, train=False)
 
         # Loss Functions
         self.MSE = tf.reduce_mean(tf.squared_difference(self.x, self.G))
